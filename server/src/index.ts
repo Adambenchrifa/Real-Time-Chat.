@@ -5,7 +5,8 @@ import helmet from 'helmet';
 import compression from 'compression';
 import cors from 'cors';
 import { Server } from 'socket.io';
-import { initializeChatEvents } from './websocket/events/chat';
+import { ClientToServerEvents, ServerToClientEvents } from '@chat/shared';
+import { initializeChatEvents, type SocketData } from './websocket/events/chat';
 import { AuthService } from './services/auth.service';
 
 dotenv.config();
@@ -17,7 +18,12 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
 
 // Socket.io initialization
-const io = new Server(httpServer, {
+const io = new Server<
+  ClientToServerEvents,
+  ServerToClientEvents,
+  Record<string, never>,
+  SocketData
+>(httpServer, {
   cors: {
     origin: CLIENT_ORIGIN,
     credentials: true,

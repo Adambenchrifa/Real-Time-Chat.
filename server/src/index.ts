@@ -6,6 +6,7 @@ import compression from 'compression';
 import cors from 'cors';
 import { Server } from 'socket.io';
 import { initializeChatEvents } from './websocket/events/chat';
+import { AuthService } from './services/auth.service';
 
 dotenv.config();
 
@@ -23,8 +24,30 @@ const io = new Server(httpServer, {
   },
 });
 
+// Socket.io Authentication Middleware
+io.use((socket, next) => {
+  const token = socket.handshake.auth?.token;
+
+  if (!token) {
+    return next(new Error('Authentication error'));
+  }
+
+  try {
+    const payload = AuthService.verifyToken(token, false);
+    socket.data.user = payload;
+    next();
+  } catch {
+    next(new Error('Authentication error'));
+  }
+});
+
 io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
+  console.log(
+    'A user connected:',
+    socket.id,
+    'User payload:',
+    socket.data.user
+  );
 
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
@@ -50,6 +73,9 @@ app.use(
 // 4. express.json() (for parsing JSON bodies)
 app.use(express.json());
 
+import authRoutes from './routes/auth.routes';
+import userRoutes from './routes/user.routes';
+
 // Routes
 app.get('/api/health', (_req: Request, res: Response) => {
   res.json({
@@ -58,6 +84,9 @@ app.get('/api/health', (_req: Request, res: Response) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+app.use('/api/auth', authRoutes);
+app.use('/api', userRoutes);
 
 httpServer.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

@@ -14,9 +14,7 @@ const App: React.FC = () => {
               🟢 Connected to Real-Time Server
             </span>
           ) : (
-            <span className="text-red-500">
-              🔴 Disconnected from Server
-            </span>
+            <span className="text-red-500">🔴 Disconnected from Server</span>
           )}
         </p>
       </div>

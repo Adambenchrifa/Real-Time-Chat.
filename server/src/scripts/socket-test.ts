@@ -98,6 +98,7 @@ function waitForEvent<E extends keyof ServerToClientEvents>(
       reject(new Error(`Timed out waiting for ${String(event)}`));
     }, timeoutMs);
 
+    // @ts-expect-error TypeScript cannot infer the generic socket event listener
     socket.once(event, ((payload: Parameters<ServerToClientEvents[E]>[0]) => {
       clearTimeout(timeout);
       resolve(payload);

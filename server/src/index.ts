@@ -81,6 +81,7 @@ app.use(express.json());
 
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
+import conversationRoutes from './routes/conversation.routes';
 
 // Routes
 app.get('/api/health', (_req: Request, res: Response) => {
@@ -93,6 +94,7 @@ app.get('/api/health', (_req: Request, res: Response) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api', userRoutes);
+app.use('/api/conversations', conversationRoutes);
 
 httpServer.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

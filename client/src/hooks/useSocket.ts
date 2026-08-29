@@ -9,12 +9,22 @@ export interface UseSocketReturn {
   disconnect: () => void;
 }
 
-export const useSocket = (): UseSocketReturn => {
+export const useSocket = (token: string | null): UseSocketReturn => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
 
   useEffect(() => {
-    const socketInstance: Socket = io(SERVER_URL);
+    if (!token) {
+      setSocket(null);
+      setIsConnected(false);
+      return;
+    }
+
+    const socketInstance: Socket = io(SERVER_URL, {
+      auth: {
+        token,
+      },
+    });
 
     setSocket(socketInstance);
 
@@ -40,7 +50,7 @@ export const useSocket = (): UseSocketReturn => {
       setSocket(null);
       setIsConnected(false);
     };
-  }, []);
+  }, [token]);
 
   const disconnect = useCallback(() => {
     if (socket) {

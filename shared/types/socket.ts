@@ -1,6 +1,6 @@
-import { MessageWithSender, CreateMessageDto } from './message.js';
-import { ConversationWithParticipants } from './conversation.js';
-import { PublicUser } from './user.js';
+import { MessageWithSender, CreateMessageDto } from './message';
+import { ConversationWithParticipants } from './conversation';
+import { PublicUser } from './user';
 
 export interface ServerToClientEvents {
   new_message: (message: MessageWithSender) => void;

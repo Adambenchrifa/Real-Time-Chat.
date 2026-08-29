@@ -8,10 +8,10 @@ import {
   PublicUser,
   ServerToClientEvents,
 } from '@chat/shared';
-import { db } from '../../db/index.js';
-import { messages, users } from '../../db/schema/index.js';
-import { TokenPayload } from '../../services/auth.service.js';
-import { verifyParticipant } from '../../services/conversation.service.js';
+import { db } from '../../db/index';
+import { messages, users } from '../../db/schema/index';
+import { TokenPayload } from '../../services/auth.service';
+import { verifyParticipant } from '../../services/conversation.service';
 
 export interface SocketData {
   user: TokenPayload;

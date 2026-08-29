@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AuthService, TokenPayload } from '../services/auth.service.js';
+import { AuthService, TokenPayload } from '../services/auth.service';
 import { ApiResponse } from '@chat/shared';
 
 declare global {

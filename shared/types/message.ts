@@ -1,4 +1,4 @@
-import { PublicUser } from './user.js';
+import { PublicUser } from './user';
 
 export enum MessageType {
   TEXT = 'text',

@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { eq, or } from 'drizzle-orm';
-import { db } from '../db/index.js';
-import { users } from '../db/schema/index.js';
+import { db } from '../db/index';
+import { users } from '../db/schema/index';
 import {
   RegisterUserDto,
   LoginUserDto,

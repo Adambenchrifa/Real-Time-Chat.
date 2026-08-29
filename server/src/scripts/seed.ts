@@ -1,11 +1,11 @@
 import bcrypt from 'bcrypt';
 import { eq } from 'drizzle-orm';
-import { client, db } from '../db/index.js';
+import { client, db } from '../db/index';
 import {
   conversationParticipants,
   conversations,
   users,
-} from '../db/schema/index.js';
+} from '../db/schema/index';
 
 const SEED_PASSWORD = 'password123';
 const SALT_ROUNDS = 10;

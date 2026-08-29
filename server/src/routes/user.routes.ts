@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { requireAuth } from '../middleware/auth.middleware.js';
-import { db } from '../db/index.js';
-import { users } from '../db/schema/index.js';
+import { requireAuth } from '../middleware/auth.middleware';
+import { db } from '../db/index';
+import { users } from '../db/schema/index';
 import { eq } from 'drizzle-orm';
 import { ApiResponse, PublicUser } from '@chat/shared';
 

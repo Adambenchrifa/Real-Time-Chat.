@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm';
-import { db } from '../db/index.js';
-import { conversationParticipants } from '../db/schema/index.js';
+import { db } from '../db/index';
+import { conversationParticipants } from '../db/schema/index';
 
 export async function verifyParticipant(
   conversationId: string,

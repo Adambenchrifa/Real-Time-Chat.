@@ -1,5 +1,5 @@
-import { PublicUser } from './user.js';
-import { MessageWithSender } from './message.js';
+import { PublicUser } from './user';
+import { MessageWithSender } from './message';
 
 export interface Conversation {
   id: string;

@@ -7,9 +7,9 @@ import {
   index,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { users } from './users.js';
-import { messages } from './messages.js';
-import { conversationParticipants } from './conversation_participants.js';
+import { users } from './users';
+import { messages } from './messages';
+import { conversationParticipants } from './conversation_participants';
 
 export const conversations = pgTable(
   'conversations',

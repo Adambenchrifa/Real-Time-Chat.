@@ -17,7 +17,8 @@
     "drizzle-orm": "^0.45.2",
     "express": "^5.2.1",
     "helmet": "^8.3.0",
-    "postgres": "^3.4.9"
+    "postgres": "^3.4.9",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "@types/compression": "^1.8.1",

@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from './hooks/useSocket';
 import { getSession, clearSession } from './services/auth.service';
-import { PublicUser } from '@chat/shared';
+import { PublicUser, ConversationWithParticipants } from '@chat/shared';
 import Login from './screens/Login/Login';
 import Register from './screens/Register/Register';
+import ChatWindow from './screens/ChatWindow/ChatWindow';
 
 type ViewState = 'login' | 'register' | 'authenticated';
 
 const App: React.FC = () => {
   const [view, setView] = useState<ViewState>('login');
   const [user, setUser] = useState<PublicUser | null>(null);
+  const [selectedConversation, setSelectedConversation] =
+    useState<ConversationWithParticipants | null>(null);
+  const handleSelectConversation = (conv: ConversationWithParticipants) =>
+    setSelectedConversation(conv);
+
   const [token, setToken] = useState<string | null>(null);
 
   const { isConnected, disconnect } = useSocket(token);
@@ -63,31 +69,56 @@ const App: React.FC = () => {
     );
   }
 
+  if (!user || !token) {
+    return null;
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-white">
-      <div className="p-8 rounded-lg bg-gray-800 shadow-md text-center flex flex-col items-center">
-        <h1 className="text-3xl font-bold mb-2">Real-Time Chat</h1>
-        <h2 className="text-xl text-gray-300 mb-6">
-          Welcome, {user?.username}
-        </h2>
-
-        <p className="text-lg font-semibold mb-6">
-          {isConnected ? (
-            <span className="text-green-500">
-              🟢 Connected to Real-Time Server
+    <div className="flex flex-col h-screen bg-gray-900 text-white font-sans">
+      {/* Header */}
+      <header className="flex items-center justify-between p-4 bg-gray-800 border-b border-gray-700 shadow-sm z-10">
+        <div className="flex items-center gap-4">
+          <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+            Real-Time Chat
+          </h1>
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <span
+              className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
+            ></span>
+            <span className={isConnected ? 'text-green-400' : 'text-red-400'}>
+              {isConnected ? 'Connected' : 'Disconnected'}
             </span>
-          ) : (
-            <span className="text-red-500">🔴 Disconnected from Server</span>
-          )}
-        </p>
+          </div>
+        </div>
 
-        <button
-          onClick={handleLogout}
-          className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded transition-colors"
-        >
-          Logout
-        </button>
-      </div>
+        <div className="flex items-center gap-4">
+          <span className="text-gray-300">
+            Welcome, <span className="font-semibold">{user.username}</span>
+          </span>
+          <button
+            onClick={handleLogout}
+            className="px-4 py-1.5 bg-gray-700 hover:bg-red-600 text-white rounded transition-colors text-sm font-medium border border-gray-600 hover:border-red-500"
+          >
+            Logout
+          </button>
+        </div>
+      </header>
+
+      {/* Main Content Area */}
+      {selectedConversation ? (
+        <ChatWindow
+          user={user}
+          token={token}
+          conversation={selectedConversation}
+          onBack={() => setSelectedConversation(null)}
+        />
+      ) : (
+        <ChatList
+          user={user}
+          token={token}
+          onSelectConversation={handleSelectConversation}
+        />
+      )}
     </div>
   );
 };

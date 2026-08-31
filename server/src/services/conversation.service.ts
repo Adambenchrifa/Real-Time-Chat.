@@ -1,6 +1,10 @@
 import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '../db/index';
-import { conversationParticipants, conversations } from '../db/schema/index';
+import {
+  conversationParticipants,
+  conversations,
+  users,
+} from '../db/schema/index';
 import {
   ConversationWithParticipants,
   CreateConversationDto,
@@ -125,6 +129,15 @@ export async function createConversation(
   }
 
   return await db.transaction(async (tx) => {
+    const existingUsers = await tx
+      .select({ id: users.id })
+      .from(users)
+      .where(inArray(users.id, allParticipantIds));
+
+    if (existingUsers.length !== allParticipantIds.length) {
+      throw new Error('One or more participants do not exist');
+    }
+
     const [newConv] = await tx
       .insert(conversations)
       .values({

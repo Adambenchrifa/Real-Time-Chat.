@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
+import { authRateLimit } from '../middleware/rate-limit.middleware';
 import {
   RegisterUserDto,
   LoginUserDto,
@@ -11,6 +12,7 @@ const router = Router();
 
 router.post(
   '/register',
+  authRateLimit,
   async (
     req: Request<object, ApiResponse<AuthResponse>, RegisterUserDto>,
     res: Response<ApiResponse<AuthResponse>>
@@ -67,6 +69,7 @@ router.post(
 
 router.post(
   '/login',
+  authRateLimit,
   async (
     req: Request<object, ApiResponse<AuthResponse>, LoginUserDto>,
     res: Response<ApiResponse<AuthResponse>>
@@ -114,6 +117,7 @@ router.post(
 
 router.post(
   '/refresh',
+  authRateLimit,
   (
     req: Request<
       object,

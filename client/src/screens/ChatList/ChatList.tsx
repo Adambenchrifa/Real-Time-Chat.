@@ -5,17 +5,19 @@ import {
   fetchUsers,
   createConversation,
 } from '../../services/conversation.service';
-import { useSocket } from '../../hooks/useSocket';
+import type { Socket } from 'socket.io-client';
 
 interface ChatListProps {
   onSelectConversation: (conv: ConversationWithParticipants) => void;
   user: PublicUser;
   token: string;
+  socket: Socket | null;
 }
 
 const ChatList: React.FC<ChatListProps> = ({
   user,
   token,
+  socket,
   onSelectConversation,
 }) => {
   const [conversations, setConversations] = useState<
@@ -26,7 +28,6 @@ const ChatList: React.FC<ChatListProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showNewChatPanel, setShowNewChatPanel] = useState(false);
 
-  const { socket } = useSocket(token);
 
   const loadConversations = useCallback(async () => {
     try {

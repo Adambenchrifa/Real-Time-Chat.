@@ -18,7 +18,9 @@ export const fetchMessages = async (
 
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.message ?? 'Failed to fetch messages');
+    throw new Error(
+      data.error?.message ?? data.message ?? 'Failed to fetch messages'
+    );
   }
   return data.data as MessageWithSender[];
 };

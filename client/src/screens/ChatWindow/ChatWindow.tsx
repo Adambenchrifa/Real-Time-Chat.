@@ -29,7 +29,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     setError(null);
     fetchMessages(token, conversation.id)
       .then((data) => {
-        if (!cancelled) setMessages(data);
+        if (!cancelled) setMessages(Array.isArray(data) ? data : []);
       })
       .catch((err) => {
         if (!cancelled) {
@@ -71,7 +71,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     setDraft('');
   };
 
-  const other = conversation.participants.find((participant) => participant.id !== user.id);
+  const participants = Array.isArray(conversation?.participants)
+    ? conversation.participants
+    : [];
+  const other = participants.find((participant) => participant.id !== user.id);
   const title = conversation.isGroup && conversation.title
     ? conversation.title
     : other?.username || 'Conversation';
@@ -90,7 +93,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         {!isLoading && !error && messages.length === 0 ? <p className="text-gray-500">No messages yet.</p> : null}
         {messages.map((message) => (
           <div key={message.id} className={message.senderId === user.id ? 'ml-auto max-w-[75%] rounded-lg bg-blue-600 p-3' : 'max-w-[75%] rounded-lg bg-gray-800 p-3'}>
-            <p className="mb-1 text-xs text-gray-300">{message.sender.username}</p>
+            <p className="mb-1 text-xs text-gray-300">{message.sender?.username || 'Unknown user'}</p>
             <p className="break-words">{message.content}</p>
           </div>
         ))}

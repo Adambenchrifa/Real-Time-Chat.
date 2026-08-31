@@ -89,7 +89,12 @@ export const getTokenExpiryMs = (token: string): number | null => {
   try {
     const encodedPayload = token.split('.')[1];
     if (!encodedPayload) return null;
-    const payload = JSON.parse(atob(encodedPayload)) as { exp?: unknown };
+    const base64Payload = encodedPayload.replace(/-/g, '+').replace(/_/g, '/');
+    const paddedPayload = base64Payload.padEnd(
+      base64Payload.length + ((4 - (base64Payload.length % 4)) % 4),
+      '='
+    );
+    const payload = JSON.parse(atob(paddedPayload)) as { exp?: unknown };
     return typeof payload.exp === 'number' ? payload.exp * 1000 : null;
   } catch {
     return null;

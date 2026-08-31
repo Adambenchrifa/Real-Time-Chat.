@@ -4,6 +4,7 @@ import { getSession, clearSession } from './services/auth.service';
 import { PublicUser, ConversationWithParticipants } from '@chat/shared';
 import Login from './screens/Login/Login';
 import Register from './screens/Register/Register';
+import ChatList from './screens/ChatList/ChatList';
 import ChatWindow from './screens/ChatWindow/ChatWindow';
 
 type ViewState = 'login' | 'register' | 'authenticated';
@@ -18,7 +19,7 @@ const App: React.FC = () => {
 
   const [token, setToken] = useState<string | null>(null);
 
-  const { isConnected, disconnect } = useSocket(token);
+  const { socket, isConnected, disconnect } = useSocket(token);
 
   useEffect(() => {
     const session = getSession();

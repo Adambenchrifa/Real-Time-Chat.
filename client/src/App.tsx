@@ -110,6 +110,7 @@ const App: React.FC = () => {
         <ChatWindow
           user={user}
           token={token}
+          socket={socket}
           conversation={selectedConversation}
           onBack={() => setSelectedConversation(null)}
         />
@@ -117,6 +118,7 @@ const App: React.FC = () => {
         <ChatList
           user={user}
           token={token}
+          socket={socket}
           onSelectConversation={handleSelectConversation}
         />
       )}

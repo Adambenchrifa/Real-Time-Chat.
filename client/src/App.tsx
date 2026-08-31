@@ -14,6 +14,47 @@ import ChatList from './screens/ChatList/ChatList';
 import ChatWindow from './screens/ChatWindow/ChatWindow';
 
 type ViewState = 'login' | 'register' | 'authenticated';
+interface ChatWindowBoundaryProps {
+  onBack: () => void;
+  children: React.ReactNode;
+}
+
+interface ChatWindowBoundaryState {
+  hasError: boolean;
+}
+
+class ChatWindowBoundary extends React.Component<
+  ChatWindowBoundaryProps,
+  ChatWindowBoundaryState
+> {
+  state: ChatWindowBoundaryState = { hasError: false };
+
+  static getDerivedStateFromError(): ChatWindowBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error): void {
+    console.error('ChatWindow crashed:', error);
+  }
+
+  render(): React.ReactNode {
+    if (this.state.hasError) {
+      return (
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 bg-gray-900 p-6 text-gray-200">
+          <p className="text-red-400">Unable to open this conversation.</p>
+          <button
+            onClick={this.props.onBack}
+            className="rounded bg-gray-700 px-4 py-2 hover:bg-gray-600"
+          >
+            Back to chats
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 
 const App: React.FC = () => {
   const [view, setView] = useState<ViewState>('login');
@@ -160,13 +201,15 @@ const App: React.FC = () => {
 
       {/* Main Content Area */}
       {selectedConversation ? (
-        <ChatWindow
+        <ChatWindowBoundary onBack={() => setSelectedConversation(null)}>
+          <ChatWindow
           user={user}
           token={token}
           socket={socket}
           conversation={selectedConversation}
           onBack={() => setSelectedConversation(null)}
-        />
+          />
+        </ChatWindowBoundary>
       ) : (
         <ChatList
           user={user}

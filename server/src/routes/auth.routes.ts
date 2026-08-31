@@ -16,22 +16,31 @@ router.post(
     res: Response<ApiResponse<AuthResponse>>
   ) => {
     try {
-      const { username, email, password } = req.body;
+      const { username, email, password } = req.body || {};
 
-      if (!username || !email || !password) {
+      if (
+        typeof username !== 'string' ||
+        typeof email !== 'string' ||
+        typeof password !== 'string' ||
+        username.trim().length < 3 ||
+        username.trim().length > 50 ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ||
+        password.length < 8 ||
+        password.length > 128
+      ) {
         res.status(400).json({
           success: false,
           error: {
             code: 'BAD_REQUEST',
-            message: 'Username, email, and password are required',
+            message: 'Username, email, and password are invalid or missing',
           },
         });
         return;
       }
 
       const authData = await AuthService.registerUser({
-        username,
-        email,
+        username: username.trim(),
+        email: email.trim().toLowerCase(),
         password,
       });
 
@@ -42,11 +51,14 @@ router.post(
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : 'Registration failed';
-      res.status(400).json({
+      const duplicateAccount = /already in use/i.test(errorMessage);
+      res.status(duplicateAccount ? 409 : 400).json({
         success: false,
         error: {
           code: 'REGISTRATION_FAILED',
-          message: errorMessage,
+          message: duplicateAccount
+            ? 'Unable to create an account with those details'
+            : errorMessage,
         },
       });
     }
@@ -60,20 +72,28 @@ router.post(
     res: Response<ApiResponse<AuthResponse>>
   ) => {
     try {
-      const { email, password } = req.body;
+      const { email, password } = req.body || {};
 
-      if (!email || !password) {
+      if (
+        typeof email !== 'string' ||
+        typeof password !== 'string' ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ||
+        password.length === 0
+      ) {
         res.status(400).json({
           success: false,
           error: {
             code: 'BAD_REQUEST',
-            message: 'Email and password are required',
+            message: 'Email and password are invalid or missing',
           },
         });
         return;
       }
 
-      const authData = await AuthService.loginUser({ email, password });
+      const authData = await AuthService.loginUser({
+        email: email.trim().toLowerCase(),
+        password,
+      });
 
       res.json({
         success: true,
@@ -103,7 +123,7 @@ router.post(
     res: Response<ApiResponse<{ accessToken: string; refreshToken: string }>>
   ) => {
     try {
-      const { refreshToken } = req.body;
+      const { refreshToken } = req.body || {};
 
       if (!refreshToken) {
         res.status(400).json({
@@ -116,23 +136,7 @@ router.post(
         return;
       }
 
-      const payload = AuthService.verifyToken(refreshToken, true);
-      if (!payload.id) {
-        res.status(401).json({
-          success: false,
-          error: {
-            code: 'UNAUTHORIZED',
-            message: 'Invalid refresh token',
-          },
-        });
-        return;
-      }
-
-      // Generate new tokens
-      const tokens = AuthService.generateTokens({
-        id: payload.id,
-        email: payload.email || '',
-      });
+      const tokens = await AuthService.refreshTokens(refreshToken);
 
       res.json({
         success: true,

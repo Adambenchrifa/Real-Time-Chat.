@@ -17,6 +17,9 @@ import {
 } from '@chat/shared';
 
 const router = Router();
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const isValidUuid = (value: unknown): value is string =>
+  typeof value === 'string' && UUID_PATTERN.test(value);
 
 router.use(requireAuth);
 
@@ -49,7 +52,7 @@ router.get(
         err instanceof Error ? err.message : 'Internal server error';
       res.status(500).json({
         success: false,
-        error: { code: 'INTERNAL_ERROR', message: errorMessage },
+        error: { code: 'INTERNAL_ERROR', message: 'Internal server error' },
       });
     }
   }
@@ -74,24 +77,31 @@ router.post(
         return;
       }
 
-      const data = req.body as CreateConversationDto;
+      const data = (req.body || {}) as Partial<CreateConversationDto>;
 
       if (
-        !data.participantIds ||
         !Array.isArray(data.participantIds) ||
-        data.participantIds.length === 0
+        data.participantIds.length === 0 ||
+        data.participantIds.length > 100 ||
+        data.participantIds.some((id) => !isValidUuid(id)) ||
+        (data.title !== undefined &&
+          (typeof data.title !== 'string' || data.title.length > 200)) ||
+        (data.isGroup !== undefined && typeof data.isGroup !== 'boolean')
       ) {
         res.status(400).json({
           success: false,
           error: {
             code: 'BAD_REQUEST',
-            message: 'participantIds must be a non-empty array',
+            message: 'Conversation data is invalid',
           },
         });
         return;
       }
 
-      const conversation = await createConversation(data, userId);
+      const conversation = await createConversation(
+        data as CreateConversationDto,
+        userId
+      );
       res.status(201).json({
         success: true,
         data: conversation,
@@ -124,6 +134,14 @@ router.get(
       }
 
       const conversationId = req.params.id;
+      if (!isValidUuid(conversationId)) {
+        res.status(400).json({
+          success: false,
+          error: { code: 'BAD_REQUEST', message: 'Invalid conversation ID' },
+        });
+        return;
+      }
+
       const isParticipant = await verifyParticipant(conversationId, userId);
       if (!isParticipant) {
         res.status(403).json({

@@ -28,6 +28,7 @@ const io = new Server<
     origin: CLIENT_ORIGIN,
     credentials: true,
   },
+  maxHttpBufferSize: 1e6,
 });
 
 // Socket.io Authentication Middleware
@@ -77,7 +78,7 @@ app.use(
 );
 
 // 4. express.json() (for parsing JSON bodies)
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
 
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';

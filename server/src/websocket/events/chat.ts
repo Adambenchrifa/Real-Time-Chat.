@@ -31,6 +31,12 @@ type ChatSocket = Socket<
   SocketData
 >;
 
+const MAX_MESSAGE_LENGTH = 4000;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+const isValidConversationId = (conversationId: string): boolean =>
+  UUID_PATTERN.test(conversationId);
+
 const conversationRoom = (conversationId: string): string =>
   `conversation:${conversationId}`;
 
@@ -79,12 +85,16 @@ const validateCreateMessageDto = (
   if (
     !data ||
     typeof data.conversationId !== 'string' ||
-    !data.conversationId
+    !isValidConversationId(data.conversationId)
   ) {
     return { ok: false, message: 'conversationId is required' };
   }
 
-  if (typeof data.content !== 'string' || !data.content.trim()) {
+  if (
+    typeof data.content !== 'string' ||
+    !data.content.trim() ||
+    data.content.trim().length > MAX_MESSAGE_LENGTH
+  ) {
     return { ok: false, message: 'content is required' };
   }
 
@@ -103,7 +113,7 @@ export const initializeChatEvents = (io: ChatServer): void => {
         return;
       }
 
-      if (!conversationId) {
+      if (!isValidConversationId(conversationId)) {
         socket.emit('error', {
           message: 'conversationId is required',
           code: 'VALIDATION_ERROR',
@@ -143,10 +153,19 @@ export const initializeChatEvents = (io: ChatServer): void => {
         return;
       }
 
-      if (!conversationId) {
+      if (!isValidConversationId(conversationId)) {
         socket.emit('error', {
           message: 'conversationId is required',
           code: 'VALIDATION_ERROR',
+        });
+        return;
+      }
+
+      const isParticipant = await verifyParticipant(conversationId, user.id);
+      if (!isParticipant) {
+        socket.emit('error', {
+          message: 'You are not a participant in this conversation',
+          code: 'FORBIDDEN',
         });
         return;
       }
@@ -238,7 +257,7 @@ export const initializeChatEvents = (io: ChatServer): void => {
         return;
       }
 
-      if (!conversationId) {
+      if (!isValidConversationId(conversationId)) {
         socket.emit('error', {
           message: 'conversationId is required',
           code: 'VALIDATION_ERROR',
@@ -267,7 +286,7 @@ export const initializeChatEvents = (io: ChatServer): void => {
         return;
       }
 
-      if (!conversationId) {
+      if (!isValidConversationId(conversationId)) {
         socket.emit('error', {
           message: 'conversationId is required',
           code: 'VALIDATION_ERROR',

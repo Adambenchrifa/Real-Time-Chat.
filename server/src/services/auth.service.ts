@@ -18,22 +18,21 @@ export interface TokenPayload {
 }
 
 const SALT_ROUNDS = 10;
+const MIN_SECRET_LENGTH = 32;
 
 export class AuthService {
   private static getJwtSecret(): string {
     const secret = process.env.JWT_SECRET;
-    if (!secret) {
-      throw new Error('JWT_SECRET is not configured in environment variables');
+    if (!secret || secret.length < MIN_SECRET_LENGTH) {
+      throw new Error('JWT_SECRET must be at least 32 characters');
     }
     return secret;
   }
 
   private static getJwtRefreshSecret(): string {
     const secret = process.env.JWT_REFRESH_SECRET;
-    if (!secret) {
-      throw new Error(
-        'JWT_REFRESH_SECRET is not configured in environment variables'
-      );
+    if (!secret || secret.length < MIN_SECRET_LENGTH) {
+      throw new Error('JWT_REFRESH_SECRET must be at least 32 characters');
     }
     return secret;
   }
@@ -63,10 +62,34 @@ export class AuthService {
     return jwt.verify(token, secret) as TokenPayload;
   }
 
+  public static async refreshTokens(refreshToken: string): Promise<{
+    accessToken: string;
+    refreshToken: string;
+  }> {
+    const payload = this.verifyToken(refreshToken, true);
+    if (!payload.id) {
+      throw new Error('Invalid refresh token');
+    }
+
+    const [user] = await db
+      .select({ id: users.id, email: users.email })
+      .from(users)
+      .where(eq(users.id, payload.id))
+      .limit(1);
+
+    if (!user) {
+      throw new Error('Invalid refresh token');
+    }
+
+    return this.generateTokens(user);
+  }
+
   public static async registerUser(
     data: RegisterUserDto
   ): Promise<AuthResponse> {
-    const { username, email, password } = data;
+    const username = data.username.trim();
+    const email = data.email.trim().toLowerCase();
+    const { password } = data;
 
     // Check if user already exists with same email or username
     const existingUsers = await db
@@ -114,7 +137,8 @@ export class AuthService {
   }
 
   public static async loginUser(data: LoginUserDto): Promise<AuthResponse> {
-    const { email, password } = data;
+    const email = data.email.trim().toLowerCase();
+    const { password } = data;
 
     const [user] = await db.select().from(users).where(eq(users.email, email));
 

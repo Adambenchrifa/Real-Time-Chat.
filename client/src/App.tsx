@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from './hooks/useSocket';
-import { getSession, clearSession } from './services/auth.service';
+import {
+  getSession,
+  clearSession,
+  getTokenExpiryMs,
+  isTokenExpired,
+  refreshAccessToken,
+} from './services/auth.service';
 import { PublicUser, ConversationWithParticipants } from '@chat/shared';
 import Login from './screens/Login/Login';
 import Register from './screens/Register/Register';
@@ -18,17 +24,56 @@ const App: React.FC = () => {
     setSelectedConversation(conv);
 
   const [token, setToken] = useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   const { socket, isConnected, disconnect } = useSocket(token);
 
   useEffect(() => {
-    const session = getSession();
-    if (session.user && session.accessToken) {
-      setUser(session.user);
-      setToken(session.accessToken);
-      setView('authenticated');
-    }
+    let active = true;
+
+    const restoreSession = async () => {
+      const session = getSession();
+      let accessToken = session.accessToken;
+
+      if (session.user && accessToken && isTokenExpired(accessToken)) {
+        accessToken = await refreshAccessToken();
+      }
+
+      const currentSession = getSession();
+      if (active && currentSession.user && accessToken) {
+        setUser(currentSession.user);
+        setToken(accessToken);
+        setView('authenticated');
+      }
+      if (active) setIsInitializing(false);
+    };
+
+    restoreSession();
+    return () => {
+      active = false;
+    };
   }, []);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const expiresAt = getTokenExpiryMs(token);
+    if (!expiresAt) return;
+
+    const delay = Math.max(1_000, expiresAt - Date.now() - 60_000);
+    const timer = window.setTimeout(async () => {
+      const nextToken = await refreshAccessToken();
+      if (nextToken) {
+        setToken(nextToken);
+      } else {
+        setUser(null);
+        setToken(null);
+        setView('login');
+      }
+    }, delay);
+
+    return () => window.clearTimeout(timer);
+  }, [token]);
 
   const handleLoginSuccess = (loggedInUser: PublicUser) => {
     const session = getSession();
@@ -51,6 +96,14 @@ const App: React.FC = () => {
     disconnect();
     setView('login');
   };
+
+  if (isInitializing) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-900 text-gray-300">
+        Restoring session...
+      </div>
+    );
+  }
 
   if (view === 'login') {
     return (
